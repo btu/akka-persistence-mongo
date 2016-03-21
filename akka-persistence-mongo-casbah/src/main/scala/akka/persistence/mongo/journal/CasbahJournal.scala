@@ -23,8 +23,11 @@ private[persistence] class CasbahJournal extends SyncWriteJournal
   implicit val concern = casbahJournalWriteConcern
 
   def writeMessages(persistentBatch: immutable.Seq[PersistentRepr]): Unit = {
-    val batch = persistentBatch.map(pr => writeJSON(pr.persistenceId, pr.sequenceNr, pr))
-    collection.insert(batch:_ *)
+    // when using `defer` the batch may be empty which cause mongodb error "no write ops were included in the batch"
+    if(persistentBatch.size > 0){ 
+        val batch = persistentBatch.map(pr => writeJSON(pr.persistenceId, pr.sequenceNr, pr))
+        collection.insert(batch:_ *)
+    }
   }
 
   @deprecated("writeConfirmations will be removed.", since = "0.7.3")
